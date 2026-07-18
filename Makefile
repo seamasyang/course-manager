@@ -1,4 +1,4 @@
-.PHONY: dev-backend dev-frontend dev build install-backend install-frontend
+.PHONY: dev-backend dev-frontend dev build install-backend install-frontend start-backend start-frontend
 
 # Backend
 install-backend:
