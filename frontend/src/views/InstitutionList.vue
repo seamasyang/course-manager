@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useInstitutionStore } from '@/stores/institution'
 import type { Institution } from '@/types/institution'
 import type { FormInstanceFunctions, FormRule } from 'tdesign-vue-next'
@@ -137,6 +137,14 @@ async function handleDelete(id: string) {
 function onPageChange(pageInfo: { current: number; pageSize: number }) {
   // Handled by the table internally since all data is in store
 }
+
+watch(
+  () => store.institutions,
+  (val) => {
+    pagination.total = val.length
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   store.fetchAll()

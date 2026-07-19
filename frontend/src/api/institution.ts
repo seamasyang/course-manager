@@ -1,12 +1,14 @@
 import axios from 'axios'
 import type { Institution, InstitutionCreate, InstitutionUpdate } from '@/types/institution'
 
-const api = axios.create({
-  baseURL: '/api',
-})
+const baseURL = import.meta.env.VITE_API_HOST
+  ? `${import.meta.env.VITE_API_HOST}/api`
+  : '/api'
+
+const api = axios.create({ baseURL })
 
 export async function listInstitutions(): Promise<Institution[]> {
-  const response = await api.get<Institution[]>('/institutions/')
+  const response = await api.get<Institution[]>('/institutions')
   return response.data
 }
 
@@ -16,7 +18,7 @@ export async function getInstitution(id: string): Promise<Institution> {
 }
 
 export async function createInstitution(data: InstitutionCreate): Promise<Institution> {
-  const response = await api.post<Institution>('/institutions/', data)
+  const response = await api.post<Institution>('/institutions', data)
   return response.data
 }
 
