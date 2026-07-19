@@ -1,6 +1,19 @@
 <template>
-  <t-layout style="height: 100vh">
-    <t-aside :width="collapsed ? 64 : 200" style="position: relative; transition: width 0.2s">
+  <t-layout style="min-height: 100vh">
+    <t-aside
+      :width="collapsed ? 64 : 200"
+      :style="{
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        alignSelf: 'flex-start',
+        flexShrink: 0,
+        overflow: 'hidden',
+        minWidth: collapsed ? '64px' : '200px',
+        maxWidth: collapsed ? '64px' : '200px',
+        transition: 'width 0.2s, min-width 0.2s, max-width 0.2s',
+      }"
+    >
       <t-menu theme="light" :value="$route.path" @change="navigate" :collapsed="collapsed">
         <template #logo>
           <h3 v-if="!collapsed" style="margin: 0; padding: 16px; text-align: center; white-space: nowrap;">Course manager</h3>
@@ -43,7 +56,7 @@
       <t-content>
         <router-view />
       </t-content>
-      <t-footer>Copyright @ 2019-{{ new Date().getFullYear() }} David Yang.</t-footer>
+      <t-footer>Copyright @ {{ new Date().getFullYear() }} David Yang.</t-footer>
     </t-layout>
   </t-layout>
 </template>

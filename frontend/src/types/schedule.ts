@@ -1,3 +1,5 @@
+import type { Institution } from '@/types/institution'
+
 export interface Schedule {
   id: string
   institution_id: string
@@ -8,6 +10,8 @@ export interface Schedule {
   start_time: string | null
   end_time: string | null
   remarks: string | null
+
+  institution: Institution | null
 }
 
 export interface ScheduleCreate {

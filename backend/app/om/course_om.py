@@ -3,16 +3,22 @@ import logging
 
 from app.models.course import Course
 from app.dao.course_dao import course_dao
+from app.om.schedule_om import schedule_om
 
 logger = logging.getLogger(__name__)
 
 
 class CourseOM:
     async def list(self) -> list[Course]:
-        return await course_dao.list()
+        courses =  await course_dao.list()
+        for course in courses:
+            course.schedule = await schedule_om.get(course.schedule_id)
+        return courses
 
     async def get(self, id: str) -> Course | None:
-        return await course_dao.get(id)
+        course = await course_dao.get(id)
+        course.schedule = await schedule_om.get(course.schedule_id)
+        return course
 
     async def create(self, course: Course) -> int:
         course.id = str(uuid.uuid4())

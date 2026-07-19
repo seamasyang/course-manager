@@ -5,7 +5,7 @@
       v-model="localValue"
       :placeholder="placeholder"
       :maxlength="maxlength"
-      :autosize="{ minRows: 3, maxRows: 10 }"
+      :autosize="{ minRows: 5, maxRows: 10 }"
     />
     <div v-else class="markdown-preview">
       <ChatMarkdown :content="localValue" />
@@ -45,6 +45,7 @@ const localValue = computed({
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
 }
 
 .markdown-preview {

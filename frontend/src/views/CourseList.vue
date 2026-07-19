@@ -5,20 +5,17 @@
         <t-heading :level="4">Courses</t-heading>
       </t-col>
       <t-col>
-        <t-button theme="primary" @click="openCreateDialog">Add Course</t-button>
+        <t-button theme="primary" @click="openCreate">Add Course</t-button>
       </t-col>
     </t-row>
 
-    <t-table
-      :data="store.courses"
-      :loading="store.loading"
-      row-key="id"
-      :columns="columns"
-      :pagination="pagination"
-      @page-change="onPageChange"
-    >
+    <t-table :data="store.courses" :loading="store.loading" row-key="id" :columns="columns" :pagination="pagination"
+      @page-change="onPageChange">
+      <template #institution_id="{ row }">
+        {{ row.schedule.institution.name }}
+      </template>
       <template #schedule_id="{ row }">
-        {{ getScheduleLabel(row.schedule_id) }}
+        {{ row.schedule.subject }}
       </template>
       <template #content="{ row }">
         <ChatMarkdown :content="row.content || ''" />
@@ -27,72 +24,29 @@
         <ChatMarkdown :content="row.follow_up || ''" />
       </template>
       <template #operation="{ row }">
-        <t-button variant="text" theme="primary" @click="openEditDialog(row)">Edit</t-button>
+        <t-button variant="text" theme="primary" @click="openView(row)">View</t-button>
+        <t-button variant="text" theme="primary" @click="openEdit(row)">Edit</t-button>
         <t-popconfirm content="Are you sure you want to delete this course?" @confirm="handleDelete(row.id)">
           <t-button variant="text" theme="danger">Delete</t-button>
         </t-popconfirm>
       </template>
     </t-table>
-
-    <t-dialog
-      v-model:visible="dialogVisible"
-      :header="isEditing ? 'Edit Course' : 'Add Course'"
-      :confirm-on-enter="true"
-      @confirm="handleSubmit"
-    >
-      <t-form :data="formData" :rules="rules" ref="formRef" @submit="handleSubmit">
-        <t-form-item label="Schedule" name="schedule_id">
-          <t-select v-model="formData.schedule_id" placeholder="Select schedule">
-            <t-option
-              v-for="sched in scheduleStore.schedules"
-              :key="sched.id"
-              :value="sched.id"
-              :label="`${getInstitutionName(sched.institution_id)} - ${sched.subject}`"
-            />
-          </t-select>
-        </t-form-item>
-        <t-form-item label="Date" name="date">
-          <t-date-picker v-model="formData.date" placeholder="Select date" />
-        </t-form-item>
-        <t-form-item label="Content" name="content">
-          <MarkdownEditor v-model="formData.content" placeholder="Enter content (markdown supported)" :maxlength="500" />
-        </t-form-item>
-        <t-form-item label="Follow Up" name="follow_up">
-          <MarkdownEditor v-model="formData.follow_up" placeholder="Enter follow up (markdown supported)" />
-        </t-form-item>
-      </t-form>
-    </t-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onMounted, reactive, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCourseStore } from '@/stores/course'
 import { useScheduleStore } from '@/stores/schedule'
 import { useInstitutionStore } from '@/stores/institution'
 import { ChatMarkdown } from '@tdesign-vue-next/chat'
-import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import type { Course } from '@/types/course'
-import type { FormInstanceFunctions, FormRule } from 'tdesign-vue-next'
 
+const router = useRouter()
 const store = useCourseStore()
 const scheduleStore = useScheduleStore()
 const institutionStore = useInstitutionStore()
-const dialogVisible = ref(false)
-const isEditing = ref(false)
-const editingId = ref<string | null>(null)
-const formRef = ref<FormInstanceFunctions>()
-
-const formData = reactive({
-  schedule_id: '',
-  date: '',
-  content: '',
-  follow_up: '',
-})
-
-const rules: Record<string, FormRule[]> = {
-  schedule_id: [{ required: true, message: 'Schedule is required', type: 'warning' }],
-}
 
 const pagination = reactive({
   defaultPageSize: 10,
@@ -101,59 +55,23 @@ const pagination = reactive({
 })
 
 const columns = [
-  { colKey: 'schedule_id', title: 'Schedule', width: '200' },
+  { colKey: 'institution_id', title: 'Institution', width: '120' },
+  { colKey: 'schedule_id', title: 'Subject', width: '60' },
   { colKey: 'date', title: 'Date', width: '120' },
-  { colKey: 'content', title: 'Content', width: '200' },
-  { colKey: 'follow_up', title: 'Follow Up', width: '150' },
   { colKey: 'operation', title: 'Actions', width: '150' },
 ]
 
-function getInstitutionName(id: string): string {
-  const inst = institutionStore.institutions.find((i) => i.id === id)
-  return inst ? inst.name : id
+
+function openCreate() {
+  router.push('/courses/new')
 }
 
-function getScheduleLabel(id: string): string {
-  const sched = scheduleStore.schedules.find((s) => s.id === id)
-  if (!sched) return id
-  return `${getInstitutionName(sched.institution_id)} - ${sched.subject}`
+function openView(course: Course) {
+  router.push(`/courses/${course.id}`)
 }
 
-function resetForm() {
-  formData.schedule_id = ''
-  formData.date = ''
-  formData.content = ''
-  formData.follow_up = ''
-}
-
-function openCreateDialog() {
-  isEditing.value = false
-  editingId.value = null
-  resetForm()
-  dialogVisible.value = true
-}
-
-function openEditDialog(course: Course) {
-  isEditing.value = true
-  editingId.value = course.id
-  formData.schedule_id = course.schedule_id
-  formData.date = course.date || ''
-  formData.content = course.content || ''
-  formData.follow_up = course.follow_up || ''
-  dialogVisible.value = true
-}
-
-async function handleSubmit() {
-  const valid = await formRef.value?.validate()
-  if (!valid) return
-
-  if (isEditing.value && editingId.value) {
-    await store.update(editingId.value, formData)
-  } else {
-    await store.create(formData)
-  }
-  dialogVisible.value = false
-  await store.fetchAll()
+function openEdit(course: Course) {
+  router.push(`/courses/${course.id}?mode=edit`)
 }
 
 async function handleDelete(id: string) {
@@ -174,7 +92,11 @@ watch(
 
 onMounted(() => {
   store.fetchAll()
-  scheduleStore.fetchAll()
-  institutionStore.fetchAll()
+  if (scheduleStore.schedules.length === 0) {
+    scheduleStore.fetchAll()
+  }
+  if (institutionStore.institutions.length === 0) {
+    institutionStore.fetchAll()
+  }
 })
 </script>

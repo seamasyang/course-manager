@@ -18,7 +18,7 @@
       @page-change="onPageChange"
     >
       <template #institution_id="{ row }">
-        {{ getInstitutionName(row.institution_id) }}
+        {{ row.institution.name }}
       </template>
       <template #start_time="{ row }">
         {{ formatTime(row.start_time) }}
@@ -132,11 +132,6 @@ const columns = [
   { colKey: 'operation', title: 'Actions', width: '150' },
 ]
 
-function getInstitutionName(id: string): string {
-  const inst = institutionStore.institutions.find((i) => i.id === id)
-  return inst ? inst.name : id
-}
-
 function formatTime(time: string | null | undefined): string {
   if (!time) return ''
   // time format from backend may be HH:mm:ss or HH:mm
@@ -154,14 +149,15 @@ function resetForm() {
   formData.remarks = ''
 }
 
-function openCreateDialog() {
+async function openCreateDialog() {
   isEditing.value = false
   editingId.value = null
   resetForm()
+  await ensureReferenceData()
   dialogVisible.value = true
 }
 
-function openEditDialog(schedule: Schedule) {
+async function openEditDialog(schedule: Schedule) {
   isEditing.value = true
   editingId.value = schedule.id
   formData.institution_id = schedule.institution_id
@@ -172,6 +168,7 @@ function openEditDialog(schedule: Schedule) {
   formData.start_time = schedule.start_time || ''
   formData.end_time = schedule.end_time || ''
   formData.remarks = schedule.remarks || ''
+  await ensureReferenceData()
   dialogVisible.value = true
 }
 
@@ -206,6 +203,11 @@ watch(
 
 onMounted(() => {
   store.fetchAll()
-  institutionStore.fetchAll()
 })
+
+async function ensureReferenceData() {
+  if (institutionStore.institutions.length === 0) {
+    await institutionStore.fetchAll()
+  }
+}
 </script>

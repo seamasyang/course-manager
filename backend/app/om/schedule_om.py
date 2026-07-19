@@ -2,17 +2,24 @@ import uuid
 import logging
 
 from app.models.schedule import Schedule
+from app.om.institution_om import institution_om
 from app.dao.schedule_dao import schedule_dao
+
 
 logger = logging.getLogger(__name__)
 
 
 class ScheduleOM:
     async def list(self) -> list[Schedule]:
-        return await schedule_dao.list()
+        schedules =  await schedule_dao.list()        
+        for schedule in schedules:
+            schedule.institution = await institution_om.get(schedule.institution_id)
+        return schedules
 
     async def get(self, id: str) -> Schedule | None:
-        return await schedule_dao.get(id)
+        schedule =  await schedule_dao.get(id)
+        schedule.institution = await institution_om.get(schedule.institution_id)
+        return schedule    
 
     async def create(self, schedule: Schedule) -> int:
         schedule.id = str(uuid.uuid4())

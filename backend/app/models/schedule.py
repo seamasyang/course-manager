@@ -1,7 +1,9 @@
 from datetime import date, time
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
+
+from app.models import Institution
 
 Subject = Literal["数学", "英语", "物理", "体育", "化学", "语文"]
 
@@ -16,3 +18,6 @@ class Schedule(BaseModel):
     start_time: time | None = None
     end_time: time | None = None
     remarks: str = ""
+
+    # ext
+    institution: Optional[Institution] = None
