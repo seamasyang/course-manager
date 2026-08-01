@@ -20,15 +20,16 @@ class CourseOM:
         course.schedule = await schedule_om.get(course.schedule_id)
         return course
 
-    async def create(self, course: Course) -> int:
+    async def create(self, course: Course) -> Course:
         course.id = str(uuid.uuid4())
-        return await course_dao.create(course)
+        await course_dao.create(course)
+        return await self.get(course.id)
 
-    async def update(self, course: Course) -> int:
+    async def update(self, course: Course) -> Course:
         logger.debug("start to updating.")
-        num = await course_dao.update(course)
-        logger.debug(f"complete to updating; count {num}")
-        return num
+        await course_dao.update(course)
+        logger.debug("complete to updating")
+        return await self.get(course.id)
 
     async def delete(self, id: str) -> int:
         return await course_dao.delete(id)

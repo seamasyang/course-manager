@@ -13,15 +13,16 @@ class InstitutionOM:
     async def get(self, id:str) -> Institution|None:
         return await institution_dao.get(id)
     
-    async def create(self, institution:Institution) -> int:
+    async def create(self, institution:Institution) -> Institution:
         institution.id = str(uuid.uuid4())
-        return await institution_dao.create(institution)
+        await institution_dao.create(institution)
+        return await self.get(institution.id)
     
-    async def update(self, institution:Institution) -> int:
+    async def update(self, institution:Institution) -> Institution:
         logger.debug("start to updating.")
-        num = await institution_dao.update(institution)
-        logger.debug("complete to updating; count {num}")
-        return num
+        await institution_dao.update(institution)
+        logger.debug("complete to updating")
+        return await self.get(institution.id)
     
     async def delete(self, id:str) -> Institution|None:
         return await institution_dao.delete(id)

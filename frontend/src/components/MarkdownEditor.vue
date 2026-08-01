@@ -8,7 +8,7 @@
       :autosize="{ minRows: 5, maxRows: 10 }"
     />
     <div v-else class="markdown-preview">
-      <ChatMarkdown :content="localValue" />
+      <ChatMarkdown :content="localValue" :options="{ previewer: { lazyLoadImg: { noLoadImgNum: -1 } } }" />
     </div>
     <div class="editor-toolbar">
       <t-button variant="text" size="small" @click="preview = !preview">
